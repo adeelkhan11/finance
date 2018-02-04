@@ -1,0 +1,57 @@
+{
+  "files": [
+    {
+      "coltypes": ["integer", "date", "text", "nullable decimal", "nullable decimal", "text", "null"],
+      "banks": [
+        {
+          "name": "Westpac",
+          "colnames": ["account", "date", "description", "debit", "credit", "category", "serial"]
+        }
+      ]
+    },
+    {
+      "coltypes": ["date", "decimal", "text", "decimal"],
+      "banks": [
+        {
+          "name": "CBA",
+          "colnames": ["date", "amount", "description", "balance"]
+        }
+      ]
+    },
+    {
+      "coltypes": ["date", "decimal", "text", "nullable decimal"],
+      "banks": [
+        {
+          "name": "CBA",
+          "colnames": ["date", "amount", "description", "balance"]
+        }
+      ]
+    },
+    {
+      "coltypes": ["date", "text", "nullable decimal", "nullable decimal", "decimal"],
+      "banks": [
+        {
+          "name": "St George",
+          "colnames": ["date", "description", "debit", "credit", "balance"]
+        },
+        {
+          "name": "ING Direct",
+          "colnames": ["date", "description", "credit", "amount", "balance"]
+        }
+      ]
+    },
+    {
+      "coltypes": ["date", "decimal", "text"],
+      "banks": [
+        {
+          "name": "Custom",
+          "colnames": ["date", "amount", "description"]
+        },
+        {
+          "name": "ANZ",
+          "colnames": ["date", "amount", "description"]
+        }
+      ]
+    }
+  ]
+}
