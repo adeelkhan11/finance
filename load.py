@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3
 """
 Created on 12 Oct 2015
 
@@ -8,6 +9,7 @@ import argparse
 import os
 
 from finance.bankfile import BankFile
+
 
 def main(data_file):
     logger.info("Loading file: %s", data_file)

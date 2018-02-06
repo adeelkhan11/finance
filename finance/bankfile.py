@@ -1,7 +1,7 @@
 
 import logging
 
-from finance.financedb import FinanceDb
+from finance.financedb import FinanceDB
 from finance.csvfile import CSVFile
 from finance.banks import Banks
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class BankFile:
     def __init__(self, file_name):
-        self.db = FinanceDb()
+        self.db = FinanceDB()
         self.c = self.db.connect('finance.db')
 
         self.bank_score = {}

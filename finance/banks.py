@@ -60,18 +60,18 @@ class Banks:
         if len(bank_candidates) == 1:
             self.select_column_names(bank_spec)
         else:
-            logging.DEBUG("Basename: %s", os.path.basename(file_name))
+            logger.debug("Basename: %s", os.path.basename(file_name))
             file_parts = os.path.basename(file_name).split('_')
 
             if 'ANZ' in bank_candidates and file_parts[0][:3] == 'ANZ':
-                self.select_column_names(bank, 'ANZ')
+                self.select_column_names(bank_spec, 'ANZ')
             elif 'St George' in bank_candidates and file_parts[0][:3] == 'tra':
-                self.select_column_names(bank, 'St George')
+                self.select_column_names(bank_spec, 'St George')
             elif 'ING Direct' in bank_candidates and file_parts[0][:3] == 'Tra':
-                self.select_column_names(bank, 'ING Direct')
+                self.select_column_names(bank_spec, 'ING Direct')
             elif 'Custom' in bank_candidates:
                 if len(file_parts) > 2:
-                    self.select_column_names(bank, 'Custom')
+                    self.select_column_names(bank_spec, 'Custom')
                     self.bank.name = file_parts[0]
                     self.bank.account_name = file_parts[1]
                 else:

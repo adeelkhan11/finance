@@ -1,9 +1,9 @@
 from finance.dbutil import DBUtil
 
-MONEY_FORMAT = "%11.2f"
 
+class FinanceDB(DBUtil):
+    MONEY_FORMAT = "%11.2f"
 
-class FinanceDb(DBUtil):
     def __init__(self):
         super().__init__()
 
@@ -31,10 +31,43 @@ class FinanceDb(DBUtil):
         data = self.c.fetchall()
         for tran_date, amount, description, bankname, account in data:
 
-            key = tran_date + bankname + (MONEY_FORMAT % amount) + description
+            key = tran_date + bankname + (self.MONEY_FORMAT % amount) + description
             if key in result and '-'.join([bankname, account]) not in result[key].split(','):
                 result[key] = ','.join([result[key], '-'.join([bankname, account])])
             else:
                 result[key] = '-'.join([bankname, account])
                 
         return result
+
+    def calculate_balances(self):
+        sql = '''select sequence, bank, account, tran_date, description, amount, calc_balance
+            from tran
+            order by tran_date, sequence
+            '''
+
+        self.c.execute(sql)
+        rows = self.c.fetchall()
+
+        balances = dict()
+        new_rows = []
+        for sequence, bank, account, tran_date, description, amount, calc_balance in rows:
+            acc = bank + account
+            if acc in balances:
+                balances[acc] += amount
+            else:
+                balances[acc] = amount
+
+            if round(balances[acc], 2) != calc_balance:
+                new_rows.append([sequence, bank, account, tran_date, description, amount, round(balances[acc], 2)])
+
+        return new_rows, balances
+
+    def update_balances(self, balances):
+        sql = '''update tran
+            set calc_balance = ?
+            where sequence = ?
+            '''
+
+        for sequence, bank, account, tran_date, description, amount, calc_balance in balances:
+            t = (calc_balance, sequence)
+            self.c.execute(sql, t)
