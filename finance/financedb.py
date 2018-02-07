@@ -71,3 +71,49 @@ class FinanceDB(DBUtil):
         for sequence, bank, account, tran_date, description, amount, calc_balance in balances:
             t = (calc_balance, sequence)
             self.c.execute(sql, t)
+
+    def get_rollovers(self, month):
+        sql = '''select head, new_alloc + rollover + adjustment + used as rollover
+        from allocation
+        where month = ?
+        and length(head) > 1
+        and new_alloc > 0
+        '''
+        return self.loadDictsFromQuery(['head'], ['amount'], sql, [month])
+
+    def get_expenses(self, month):
+        sql = '''select ?, ifnull(head, '92'), sum(amount)
+        from (select head, amount from tran
+        where tran_date like ?
+        and account not in ('Business', 'Home Loan', 'Vertigo', 'Loan', '037179432768')
+        UNION ALL
+        select head, 0
+        from allocation
+        where used != 0
+        and month = ?)
+        group by ifnull(head, '92')'''
+        return self.loadDictsFromQuery(['month', 'head'], ['used'], sql, [month, month + '%', month])
+
+    def save_expenses(self, expenses, rollovers):
+        keys = ['month', 'head']
+        for rec in expenses.values():
+            if rec['head'] in rollovers:
+                rec['rollover'] = rollovers[rec['head']]['amount']
+            self.saveDict('allocation', keys, rec)
+
+    def calculate_parent_allocations(self, allocations):
+        # reset parent allocations
+        for parent_alloc in [a for a in allocations.values() if len(a['head']) == 1]:
+            for item in ['new_alloc', 'rollover', 'adjustment', 'used']:
+                parent_alloc[item] = 0
+
+        for alloc in allocations.values():
+            if len(alloc['head']) == 2:
+                parent_alloc = allocations["%s_%s" % (alloc['month'], alloc['head'][:1])]
+                for item in ['new_alloc', 'rollover', 'adjustment', 'used']:
+                    parent_alloc[item] = self.sumNullables([parent_alloc[item], alloc[item]])
+
+    def save_parent_allocations(self, allocations):
+        for alloc in allocations.values():
+            if len(alloc['head']) == 1:
+                self.saveDict('allocation', ['month', 'head'], alloc)
