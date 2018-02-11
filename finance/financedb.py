@@ -1,4 +1,8 @@
+import logging
+
 from finance.dbutil import DBUtil
+
+logger = logging.getLogger(__name__)
 
 
 class FinanceDB(DBUtil):
@@ -40,10 +44,10 @@ class FinanceDB(DBUtil):
         return result
 
     def calculate_balances(self):
-        sql = '''select sequence, bank, account, tran_date, description, amount, calc_balance
+        sql = """select sequence, bank, account, tran_date, description, amount, calc_balance
             from tran
             order by tran_date, sequence
-            '''
+            """
 
         self.c.execute(sql)
         rows = self.c.fetchall()
@@ -63,35 +67,35 @@ class FinanceDB(DBUtil):
         return new_rows, balances
 
     def update_balances(self, balances):
-        sql = '''update tran
+        sql = """update tran
             set calc_balance = ?
             where sequence = ?
-            '''
+            """
 
         for sequence, bank, account, tran_date, description, amount, calc_balance in balances:
             t = (calc_balance, sequence)
             self.c.execute(sql, t)
 
     def get_rollovers(self, month):
-        sql = '''select head, new_alloc + rollover + adjustment + used as rollover
+        sql = """select head, new_alloc + rollover + adjustment + used as rollover
         from allocation
         where month = ?
         and length(head) > 1
         and new_alloc > 0
-        '''
+        """
         return self.loadDictsFromQuery(['head'], ['amount'], sql, [month])
 
     def get_expenses(self, month):
-        sql = '''select ?, ifnull(head, '92'), sum(amount)
-        from (select head, amount from tran
-        where tran_date like ?
-        and account not in ('Business', 'Home Loan', 'Vertigo', 'Loan', '037179432768')
-        UNION ALL
-        select head, 0
-        from allocation
-        where used != 0
-        and month = ?)
-        group by ifnull(head, '92')'''
+        sql = """select ?, ifnull(head, '92'), sum(amount)
+            from (select head, amount from tran
+            where tran_date like ?
+            and account not in ('Business', 'Home Loan', 'Vertigo', 'Loan', '037179432768')
+            UNION ALL
+            select head, 0
+            from allocation
+            where used != 0
+            and month = ?)
+            group by ifnull(head, '92')"""
         return self.loadDictsFromQuery(['month', 'head'], ['used'], sql, [month, month + '%', month])
 
     def save_expenses(self, expenses, rollovers):
@@ -117,3 +121,50 @@ class FinanceDB(DBUtil):
         for alloc in allocations.values():
             if len(alloc['head']) == 1:
                 self.saveDict('allocation', ['month', 'head'], alloc)
+
+    def read_last_interest_date(self, bank, account):
+        # First find the last interest payment if any
+        sql = """select max(tran_date)
+            from tran
+            where bank = ?
+              and account = ?
+              and description = 'AUTO_INTEREST'
+            """
+        t = (bank, account)
+        self.c.execute(sql, t)
+        row = self.c.fetchone()
+        last_interest_date = None
+
+        if row is not None and row[0] is not None:
+            last_interest_date = row[0]
+        else:
+            sql = """select min(tran_date)
+                from tran
+                where bank = ?
+                  and account = ?
+                """
+            t = (bank, account)
+            self.c.execute(sql, t)
+            row = self.c.fetchone()
+            if row is not None and row[0] is not None:
+                last_interest_date = row[0]
+            else:
+                # This account doesn't have any transactions
+                logger.critical("Error: Cannot calculate interest. Account %s-%s doesn't have any transactions.",
+                                bank, account)
+                exit(1)
+
+        return last_interest_date
+
+    def get_transactions(self, bank, account):
+        sql = """select sequence, bank, account, tran_date, description, amount
+            from tran
+            where bank = ?
+              and account = ?
+            order by tran_date, sequence
+            """
+        t = (bank, account)
+        self.c.execute(sql, t)
+        rows = self.c.fetchall()
+
+        return rows
