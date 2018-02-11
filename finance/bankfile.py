@@ -18,7 +18,7 @@ class BankFile:
         self.bank_score = {}
 
         self.csv_file = CSVFile(file_name)
-        self.banks = Banks('banks.json')
+        self.banks = Banks('metadata/banks.json')
 
         self.banks.determine_bank_account(self.csv_file.column_types, file_name)
 

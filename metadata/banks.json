@@ -41,6 +41,15 @@
       ]
     },
     {
+      "coltypes": ["date", "date", "text", "nullable decimal", "nullable decimal", "decimal"],
+      "banks": [
+        {
+          "name": "MCCA",
+          "colnames": ["date", "effective_date", "description", "debit", "credit", "balance"]
+        }
+      ]
+    },
+    {
       "coltypes": ["date", "decimal", "text"],
       "banks": [
         {

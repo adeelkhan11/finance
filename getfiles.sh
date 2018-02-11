@@ -5,7 +5,7 @@ echo $DATE $TIME
 #exit
 for path in `ls ~/Downloads/*.csv`
 do
-    file=`basename "$path"`
+    file="`basename "$path"`"
     #echo $file
     if [ -f "data/$file" -o -f "archive/$file" ]
     then

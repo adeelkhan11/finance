@@ -39,7 +39,7 @@ class CSVFile:
             reader = csv.reader(csvfile)
             rownum = 0
             for row in reader:
-                if len(row) == 0:
+                if len(row) <= 2:
                     continue
                 rownum += 1
                 types = []
