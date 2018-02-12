@@ -30,7 +30,9 @@ def main(bank, account, description, target_bank, target_account, reverse):
 
     with open(tran_file, 'w') as f:
         writer = csv.writer(f)
-        writer.writerows(db.query(sql, t))
+        rows = db.query(sql, t)
+        writer.writerows(rows)
+        logger.info('{} rows written to file {}.'.format(len(rows), tran_file))
 
     db.disconnect()
 
@@ -40,7 +42,7 @@ if __name__ == '__main__':
     from finance import logutil
 
     root_logger = logutil.setup_logging()
-    logger = logging.getLogger('loadallocations')
+    logger = logging.getLogger('createtranfile')
 
     parser = argparse.ArgumentParser(description='Generate transactions for loans.')
     parser.add_argument('bank',

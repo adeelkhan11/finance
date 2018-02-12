@@ -80,7 +80,7 @@ if __name__ == '__main__':
     from finance import logutil
 
     root_logger = logutil.setup_logging()
-    logger = logging.getLogger('loadallocations')
+    logger = logging.getLogger('calcinterest')
 
     parser = argparse.ArgumentParser(description='Generate interest transactions for a specific account.')
     parser.add_argument('bank')
