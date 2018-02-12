@@ -88,7 +88,7 @@ class CSVFile:
             valtype = 'date'
         m = re.match("([0-3]?[0-9])/([01]?[0-9])/([0-9]{4})$", value)
         if m:
-            value = ("%s-%s-%s" % (m.group(3), m.group(2), m.group(1)))
+            value = ("{:04}-{:02}-{:02}".format(int(m.group(3)), int(m.group(2)), int(m.group(1))))
             valtype = 'date'
         if valtype != '':
             return value, valtype

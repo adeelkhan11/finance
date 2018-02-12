@@ -25,6 +25,7 @@ class DBUtil:
     def connect(self, database):
         self.conn = sqlite3.connect(database)
         self.c = self.conn.cursor()
+        # self.conn.row_factory = sqlite3.Row
         return self.c
         
     def disconnect(self):
@@ -51,6 +52,10 @@ class DBUtil:
         for v in values:
             total += self.nullToZero(v)
         return total
+
+    def query(self, sql, t):
+        self.c.execute(sql, t)
+        return self.c.fetchall()
 
     def checkExists(self, table, keys, values):
         where_clause = ' and '.join(["%s = ?" % k for k in keys])

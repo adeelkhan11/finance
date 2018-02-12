@@ -55,7 +55,7 @@ class FinanceDB(DBUtil):
         balances = dict()
         new_rows = []
         for sequence, bank, account, tran_date, description, amount, calc_balance in rows:
-            acc = bank + account
+            acc = bank + ' ' + account
             if acc in balances:
                 balances[acc] += amount
             else:
