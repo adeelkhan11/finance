@@ -24,6 +24,7 @@ class DBUtil:
         
     def connect(self, database):
         self.conn = sqlite3.connect(database)
+        self.conn.row_factory = sqlite3.Row
         self.c = self.conn.cursor()
         # self.conn.row_factory = sqlite3.Row
         return self.c

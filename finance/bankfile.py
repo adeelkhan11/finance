@@ -1,6 +1,7 @@
 
 import logging
 
+from finance.dbtable import Tran
 from finance.financedb import FinanceDB
 from finance.csvfile import CSVFile
 from finance.banks import Banks
@@ -14,6 +15,7 @@ class BankFile:
     def __init__(self, file_name):
         self.db = FinanceDB()
         self.c = self.db.connect('finance.db')
+        self._tran = Tran(self.db)
 
         self.bank_score = {}
 
