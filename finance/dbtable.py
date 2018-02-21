@@ -1,4 +1,3 @@
-
 import logging
 
 from finance.financedb import FinanceDB
@@ -17,6 +16,8 @@ class DBTable:
         self._auto_generate_columns = kwargs.get('auto_generate_columns')
         self._where = kwargs.get('where')
         self._key_values = None
+        self._update_count = 0
+        self._insert_count = 0
 
     def __iter__(self):
         # sql = """
@@ -30,6 +31,14 @@ class DBTable:
 
         for row in cursor:
             yield row
+
+    @property
+    def update_count(self):
+        return self._update_count
+
+    @property
+    def insert_count(self):
+        return self._insert_count
 
     def select(self, **kwargs):
         # keys = kwargs.get('keys', self._keys)
@@ -55,18 +64,24 @@ class DBTable:
 
         return cursor
 
-    def save(self, row_dict):
+    def check_exists(self, row_dict):
         if self._keys is not None and self._key_values is None:
             # build dictionary of unique column values for lookup to determine update or insert
             cursor = self.select(columns=self._keys)
             self._key_values = set([':'.join([str(c) for c in r]) for r in cursor])
             logger.debug('{} unique keys loaded.'.format(len(self._key_values)))
             for i, key in enumerate(self._key_values):
-                if i > 3: break
+                if i > 3:
+                    break
                 logger.debug('Key: {}'.format(key))
         key = ':'.join([str(row_dict[c]) for c in self._keys])
+        logger.debug('New key: {}'.format(key))
+
+        return False if self._keys is None else key in self._key_values
+
+    def save(self, row_dict):
         c = self._db.conn.cursor()
-        if self._keys is not None and key in self._key_values:
+        if self._keys is not None and self.check_exists(row_dict):
             update_columns = frozenset(self._columns)
             update_keys = frozenset(self._keys)
             if self._auto_generate_columns is not None:
@@ -80,6 +95,7 @@ class DBTable:
                                    ', '.join(['{} = ?'.format(c) for c in update_columns if c in row_dict]),
                                    ' AND '.join(['{} = ?'.format(c) for c in update_keys]))
             t = tuple([row_dict.get(c) for c in list([c for c in update_columns if c in row_dict]) + list(update_keys)])
+            self._update_count += 1
         else:
             insert_columns = frozenset(self._keys + self._columns)
             if self._auto_generate_columns is not None:
@@ -90,6 +106,7 @@ class DBTable:
                                       ', '.join(insert_columns),
                                       ', '.join(['?'] * len(insert_columns)))
             t = tuple([row_dict.get(c) for c in insert_columns])
+            self._insert_count += 1
         # print(sql)
         # print(t)
         c.execute(sql, t)
@@ -103,8 +120,30 @@ class Tran(DBTable):
                          ('tran_date', 'sequence'),
                          auto_generate_columns=('sequence',))
 
-    # def save(self):
-    #    pass
+        self._trans_accounts = None
+
+    def get_accounts_with_transaction(self, row_dict):
+        tran_key_columns = ('tran_date', 'description', 'amount')
+        bank_account_columns = ('bank', 'account')
+        if self._trans_accounts is None:
+            # build dictionary of unique column values for lookup to determine update or insert
+            cursor = self.select(columns=('bank', 'account', 'tran_date', 'description', 'amount'))
+            self._trans_accounts = dict()
+            for r in cursor:
+                key = ':'.join([str(r[c]) for c in tran_key_columns])
+                bank_account = ':'.join([r[c] for c in bank_account_columns])
+                if key not in self._trans_accounts:
+                    self._trans_accounts[key] = list()
+                self._trans_accounts[key].append(bank_account)
+            logger.debug('{} unique keys loaded.'.format(len(self._trans_accounts)))
+            for i, key in enumerate(self._trans_accounts.keys()):
+                if i > 3:
+                    break
+                logger.debug('Key: {}'.format(key))
+        key = ':'.join([str(row_dict[c]) for c in tran_key_columns])
+        logger.debug('New key: {}'.format(key))
+
+        return self._trans_accounts[key] if key in self._trans_accounts else list()
 
 
 def main():
@@ -113,7 +152,7 @@ def main():
     _ = logutil.setup_logging()
 
     db = FinanceDB()
-    c = db.connect('finance.db')
+    _ = db.connect('finance.db')
 
     tran = Tran(db)
     for i, row in enumerate(tran):
@@ -129,7 +168,8 @@ def main():
         j['amount'] = 7.77
         tran.save(j)
 
-        if i > 2: break
+        if i > 2:
+            break
     tran.save(dict(tran_date='2018-02-23',
                    description='Test transaction',
                    bank='Test',
@@ -140,4 +180,5 @@ def main():
     db.disconnect()
 
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    main()

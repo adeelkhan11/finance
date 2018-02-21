@@ -15,9 +15,9 @@ def main(data_file):
     logger.info("Loading file: %s", data_file)
 
     with BankFile(data_file) as bank_file:
-        new_transactions = bank_file.new_transactions()
+        transactions = bank_file.read_transactions()
         logger.debug("Saving transactions.")
-        bank_file.load_transactions(new_transactions)
+        bank_file.save_transactions(transactions)
 
 
 if __name__ == '__main__':

@@ -20,13 +20,13 @@ def main(bank, account, description, target_bank, target_account, reverse):
 
     t = (bank, account, '%{}%'.format(description))
     sql = """
-        select tran_date, description, amount{}
+        select tran_date, amount * {}1.0, description
         from tran
         where bank = ?
           and account = ?
           and description like ?
         order by tran_date, sequence
-    """.format(' * -1' if reverse else '')
+    """.format('-' if reverse else '')
 
     with open(tran_file, 'w') as f:
         writer = csv.writer(f)
