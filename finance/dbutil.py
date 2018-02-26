@@ -77,7 +77,6 @@ class DBUtil:
             for i in range(column_count):
                 row_dict[all_columns[i]] = row[i] if all_columns[i] not in keys else str(row[i])
             rows_dict[self.getDictKey(row_dict, keys)] = row_dict
-            #print self.getDictKey(row_dict, keys), row_dict
         return rows_dict
     
     def pivotDicts(self, data, rowkeys, columnkeys, value):
@@ -116,10 +115,8 @@ class DBUtil:
             set_clause = ', '.join(["%s = ?" % k for k in columns if k not in keys])
             where_clause = ' and '.join(["%s = ?" % k for k in keys])
             sql = "update %s set %s where %s" % (table, set_clause, where_clause)
-            #print sql
             updvals = [rec[k] for k in columns if k not in keys]
             updvals.extend([rec[k] for k in keys])
-            #print updvals
             self.c.execute(sql, tuple(updvals))
         elif updateOnly:
             logger.warning("Value %s not found in table %s. Cannot update.",
@@ -127,7 +124,6 @@ class DBUtil:
             return False
         else:
             sql = "insert into %s (%s) values (%s)" % (table, ', '.join(columns), ', '.join(['?'] * len(columns)))
-            #print sql
             self.c.execute(sql, values)
         return True
 

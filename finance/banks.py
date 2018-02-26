@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 class Banks:
     def __init__(self, file_name):
         with open(file_name, 'r') as f:
-            jdata = json.load(f)
-            if 'files' in jdata:
-                self.file_specs = jdata['files']
+            json_data = json.load(f)
+            if 'files' in json_data:
+                self.file_specs = json_data['files']
             else:
                 logger.critical("Bank file definitions not found in %s.", file_name)
 
