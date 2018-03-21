@@ -59,6 +59,7 @@ class CSVFile:
 
     @staticmethod
     def check_order(lst):
+        """Checks order of list. Is case-sensitive."""
         order = ''
 
         prev = None

@@ -20,13 +20,7 @@ class DBTable:
         self._insert_count = 0
 
     def __iter__(self):
-        # sql = """
-        #     SELECT {}
-        #     FROM {}
-        #     ORDER BY {}""".format(', '.join(self._keys + self._columns), self._table_name, ', '.join(self._order_by))
-        #
-        # cursor = self._db.c.execute(sql)
-
+        """Fetch rows from the table."""
         cursor = self.select()
 
         for row in cursor:
@@ -34,13 +28,22 @@ class DBTable:
 
     @property
     def update_count(self):
+        """The number of records updated in this session."""
         return self._update_count
 
     @property
     def insert_count(self):
+        """The number of records inserted in this session."""
         return self._insert_count
 
     def select(self, **kwargs):
+        """Fetch data from the table and return a cursor.
+
+        Keyword arguments:
+        columns -- subset of columns to fetch (default all columns)
+        where -- where clause to filter the result
+        order_by -- list of column names with optional direction to sort by
+        """
         # keys = kwargs.get('keys', self._keys)
         columns = kwargs.get('columns', self._keys + self._columns)
         order_by = kwargs.get('order_by', self._order_by)
@@ -51,10 +54,10 @@ class DBTable:
             SELECT {}
             FROM {}
             {}
-            ORDER BY {}""".format(', '.join(columns),
-                                  self._table_name,
-                                  '' if where is None else 'WHERE {}'.format(where),
-                                  ', '.join(order_by))
+            {}""".format(', '.join(columns),
+                         self._table_name,
+                         '' if where is None else 'WHERE {}'.format(where),
+                         '' if order_by is None else 'ORDER BY {}'.format(', '.join(order_by)))
 
         c = self._db.conn.cursor()
         if t is None:
@@ -65,6 +68,7 @@ class DBTable:
         return cursor
 
     def check_exists(self, row_dict):
+        """Check the supplied row exists in the table based on the primary key."""
         if self._keys is not None and self._key_values is None:
             # build dictionary of unique column values for lookup to determine update or insert
             cursor = self.select(columns=self._keys)
@@ -80,6 +84,7 @@ class DBTable:
         return False if self._keys is None else key in self._key_values
 
     def save(self, row_dict):
+        """Save the supplied row to the table."""
         c = self._db.conn.cursor()
         if self._keys is not None and self.check_exists(row_dict):
             update_columns = frozenset(self._columns)

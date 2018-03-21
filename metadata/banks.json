@@ -45,7 +45,7 @@
       "banks": [
         {
           "name": "MCCA",
-          "colnames": ["date", "effective_date", "description", "debit", "credit", "balance"]
+          "colnames": ["date", "effective_date", "description", "amount", "credit", "balance"]
         }
       ]
     },

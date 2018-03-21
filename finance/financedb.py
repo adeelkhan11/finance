@@ -66,6 +66,32 @@ class FinanceDB(DBUtil):
 
         return new_rows, balances
 
+    def calculate_monthly_balances(self):
+        sql = """select sequence, bank, account, tran_date, description, amount, calc_balance
+            from tran
+            order by tran_date, sequence
+            """
+
+        self.c.execute(sql)
+        rows = self.c.fetchall()
+
+        running_balances = dict()
+        monthly_balances = dict()
+        current_month = None
+        for sequence, bank, account, tran_date, description, amount, calc_balance in rows:
+            if current_month is not None and tran_date[:7] != current_month:
+                monthly_balances[current_month] = dict()
+                for acc, balance in running_balances.items():
+                    monthly_balances[current_month][acc] = round(balance, 2)
+            acc = bank + ' ' + account
+            if acc in running_balances:
+                running_balances[acc] += amount
+            else:
+                running_balances[acc] = amount
+            current_month = tran_date[:7]
+
+        return monthly_balances
+
     def update_balances(self, balances):
         sql = """update tran
             set calc_balance = ?
